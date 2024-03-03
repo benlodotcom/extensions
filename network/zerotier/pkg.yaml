@@ -30,29 +30,15 @@ steps:
       - |
         mkdir zerotier
         tar -xzvf zerotier.tar.gz --strip-components=1 -C zerotier
-
-        # ln -sf /toolchain/bin/env /usr/bin/env
-        # ln -sf /toolchain/bin/which /usr/bin/which
-
-        # Create symlinks for files used when building.
-        # ln -s /toolchain/bin/gcc /usr/bin/gcc
-        # ln -s /toolchain/bin/g++ /usr/bin/g++
-        # ln -s /toolchain/bin/pkg-config /usr/bin/pkg-config
-        # ln -s /toolchain/bin/file /usr/bin/file
-        
     build:
       - |
-        # ls -la /toolchain/bin/
-        # ls -la /toolchain/sbin/
-        # ls -la /toolchain/lib/
-        # ls -la /toolchain/
         cd zerotier
-        # make CXX=g++ ZT_DEBUG=1 ZT_SSO_SUPPORTED=0 selftest
-        ZT_STATIC=1 make
+        ZT_STATIC=1 make -j $(nproc)
     install:
       - |
+        ls -la
         mkdir -p /rootfs/usr/local/lib/containers/zerotier/usr/local/bin/
-        cp -pr ./out/zerotier-one /rootfs/usr/local/lib/containers/zerotier/usr/local/bin
+        cp -pr ./zerotier/zerotier-one /rootfs/usr/local/lib/containers/zerotier/usr/local/bin
 
 finalize:
   - from: /rootfs
