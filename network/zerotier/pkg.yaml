@@ -1,0 +1,63 @@
+name: zerotier
+variant: alpine
+install:
+  - curl
+  - bash
+  - file
+  - rust
+  - cargo
+  - make
+  - cmake
+  - clang
+  - openssl-dev
+  - linux-headers
+  - build-base
+  - openssl-libs-static
+shell: /bin/bash
+# dependencies:
+#   - stage: base
+#   - image: "{{ .BUILD_ARG_PKGS_PREFIX }}/openssl:{{ .BUILD_ARG_PKGS }}"
+steps:
+  - sources:
+      - url: https://github.com/zerotier/ZeroTierOne/archive/refs/tags/{{ .ZEROTIER_VERSION }}.tar.gz
+        destination: zerotier.tar.gz
+        sha256: 7c6512cfc208374ea9dc9931110e35f71800c34890e0f35991ea485aae66e31c
+        sha512: 75a698dc3755f18a9a8909a231f6d9667edfeb3140e3e4925ebe2e01d2172bd1ac8d1498439e0e9959343a4258bc7f3862d8e6a6eb4f03ebc77e02ef7c074e73
+    prepare:
+      - |
+        sed -i 's#$VERSION#{{ .VERSION }}#' /pkg/manifest.yaml
+
+      - |
+        mkdir zerotier
+        tar -xzvf zerotier.tar.gz --strip-components=1 -C zerotier
+
+        # ln -sf /toolchain/bin/env /usr/bin/env
+        # ln -sf /toolchain/bin/which /usr/bin/which
+
+        # Create symlinks for files used when building.
+        # ln -s /toolchain/bin/gcc /usr/bin/gcc
+        # ln -s /toolchain/bin/g++ /usr/bin/g++
+        # ln -s /toolchain/bin/pkg-config /usr/bin/pkg-config
+        # ln -s /toolchain/bin/file /usr/bin/file
+        
+    build:
+      - |
+        # ls -la /toolchain/bin/
+        # ls -la /toolchain/sbin/
+        # ls -la /toolchain/lib/
+        # ls -la /toolchain/
+        cd zerotier
+        # make CXX=g++ ZT_DEBUG=1 ZT_SSO_SUPPORTED=0 selftest
+        ZT_STATIC=1 make
+    install:
+      - |
+        mkdir -p /rootfs/usr/local/lib/containers/zerotier/usr/local/bin/
+        cp -pr ./out/zerotier-one /rootfs/usr/local/lib/containers/zerotier/usr/local/bin
+
+finalize:
+  - from: /rootfs
+    to: /rootfs
+  - from: /pkg/manifest.yaml
+    to: /
+  - from: /pkg/zerotier.yaml
+    to: /rootfs/usr/local/etc/containers/
